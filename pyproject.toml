@@ -1,0 +1,16 @@
+[project]
+name = "noble-backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "bs4>=0.0.2",
+    "fastapi>=0.115.12",
+    "firecrawl>=2.7.1",
+    "langchain-groq>=0.3.2",
+    "mcp[cli]>=1.9.2",
+    "openai>=1.84.0",
+    "rich>=14.0.0",
+    "utils>=1.0.2",
+]
