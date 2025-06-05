@@ -151,20 +151,21 @@ async def health_check() -> str:
         str: Server status information.
     """
     try:
-        status = {
-            "status": "healthy",
-            "server_name": "content crawler",
-            "tools_available": ["get_content", "get_internal_content", "health_check"],
+        status = {"status": "healthy",
+            "server_name": "content ",
+            "tools_available": [],
             "crawlers_initialized": True
         }
         logger.info("Health check requested - server is healthy")
-        return json.dumps(status, indent=2)
+        return status
     except Exception as e:
         error_msg = f"Health check failed: {str(e)}"
         logger.error(error_msg)
         return json.dumps({"status": "unhealthy", "error": error_msg})
 
+
 # Add startup logging
+
 def setup_server():
     """Setup and configure the server."""
     logger.info("="*50)
@@ -190,3 +191,4 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error(f"Server failed to start: {e}")
         raise
+    

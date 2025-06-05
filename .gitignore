@@ -1,5 +1,7 @@
-.env
+.venv
 zz_temp.py
 mcp_client.log
 routes/MCP/mcp_client.log
 client.py
+
+routes/.env

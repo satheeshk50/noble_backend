@@ -41,12 +41,10 @@ async def lifespan(app: FastAPI):
         max_retries = 3
         for attempt in range(max_retries):
             try:
-                connected = await mcp_client.connect()
-                
+                connected = await mcp_client.connect_to_mcp_server()
                 if connected:
                     logger.info(" MCP server connected successfully")
-                    tools = await mcp_client.get_tools()
-                    pprint(tools)
+                    mcp_client.tools = await mcp_client.get_tools()
                     yield
                 else:
                     logger.error(f" Failed to connect to MCP server - attempt {attempt + 1}/{max_retries}")
@@ -87,13 +85,36 @@ def get_mcp_client():
 async def root():
     return {"message": "Hello, World!", "mcp_status": "connected" if mcp_client else "disconnected"}
 
+@app.get("/call-llm")
+async def calling_llm(query : str):
+    try:
+        response = await mcp_client.search(query=query)
+        return {"message": "LLM called successfully", "response": response}
+    except Exception as e:
+            logger.info(f"Failed to fetch tools: {str(e)}")
+
+  
+
+
 @app.get("/health")
 async def health_check():
-    return {
+    """
+    Health check endpoint to verify FastAPI and MCP tool status.
+    """
+    status = {
         "status": "healthy",
-        "mcp_connected": mcp_client is not None,
-        "server_url": server_url()
+        "message": "FastAPI server is running",
     }
 
-# Function to get the global MCP client
+    if mcp_client:
+        try:
+            response = await mcp_client.session.call_tool("health_check")
+            status["mcp_status"] = "connected"
+            status["mcp_tool_response"] = response
+        except Exception as e:
+            status["mcp_status"] = "error"
+            status["mcp_error"] = str(e)
+    else:
+        status["mcp_status"] = "disconnected"
 
+    return {"response":response, "status": status}

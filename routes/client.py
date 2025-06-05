@@ -24,21 +24,18 @@ class MCPClient:
         self._url = server_url
 
     
-    async def connect(self) -> bool:
+    async def connect_to_mcp_server(self) -> bool:
         """
         Establish connection to MCP server
         Returns True if connection successful, False otherwise
         """
         try:
-            # Create SSE connection
             self.sse_context = sse_client(self._url)
             self.read_stream, self.write_stream = await self.sse_context.__aenter__()
             
-            # Create client session
             self.session_context = ClientSession(self.read_stream, self.write_stream)
             self.session = await self.session_context.__aenter__()
             
-            # Initialize the session
             await self.session.initialize()
             
             self.logger.info(f" Successfully connected to MCP server at {self._url}")
@@ -60,7 +57,7 @@ class MCPClient:
         
         try:
             tools = await self.session.list_tools()
-            # print("📋 Available MCP tools:")
+            # print(" Available MCP tools:")
             # pprint(tools)
             return tools.tools if hasattr(tools, 'tools') else []
             
@@ -86,7 +83,27 @@ class MCPClient:
         except Exception as e:
             self.logger.error(f" Failed to call tool '{tool_name}': {str(e)}")
             return {}
-    
+        
+    async def search(self, query: str) -> Dict[str, Any]:
+        """"
+        returing the web search using the OpenAI client
+        Args:
+            query (str): The search query to perform.
+        """ 
+        try:
+            self.logger.info(f" Performing web search for query: {query}")
+            response = await self.openai_client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": query}],
+                tools=self.tools,
+                tool_choice="auto"
+            )
+            return response
+            
+        except Exception as e:
+            self.logger.error(f" Error during search: {str(e)}")
+            return {"error": str(e)}
+        
     async def cleanup(self):
         """Clean up resources"""
         try:
