@@ -56,6 +56,7 @@ noble_backend/
 ├── pyproject.toml
 ├── .env
 └── README.md
+```
 
 ## 🚀 How to Run the Project
 
@@ -72,17 +73,15 @@ Ensure you have the following installed:
 ```env
 OPENAI_API_KEY=your_openai_key
 FIRECRAWL_API_KEY=your_firecrawl_key
-SERVER_HOST=localhost
-SERVER_PORT=3001
-SSE_PATH=/sse
 
+```
 ## 🐳 Run with Docker Compose
 
 To start the backend and MCP servers, run:
 
 ```bash
 docker-compose up --build
-
+```
 ## 🔧 What This Will Do
 
 - ✅ Start the **FastMCP** service on port `3001`
