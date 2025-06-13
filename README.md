@@ -56,3 +56,75 @@ noble_backend/
 ├── pyproject.toml
 ├── .env
 └── README.md
+
+## 🚀 How to Run the Project
+
+### 1. ✅ Prerequisites
+
+Ensure you have the following installed:
+
+- [Docker](https://www.docker.com/)
+- [Docker Compose](https://docs.docker.com/compose/)
+- A `.env` file with required secrets (OpenAI/Groq keys, Firecrawl key, etc.)
+
+#### Example `.env` file:
+
+```env
+OPENAI_API_KEY=your_openai_key
+FIRECRAWL_API_KEY=your_firecrawl_key
+SERVER_HOST=localhost
+SERVER_PORT=3001
+SSE_PATH=/sse
+
+## 🐳 Run with Docker Compose
+
+To start the backend and MCP servers, run:
+
+```bash
+docker-compose up --build
+
+## 🔧 What This Will Do
+
+- ✅ Start the **FastMCP** service on port `3001`
+- ✅ Start the **FastAPI** backend service on port `8000`
+
+---
+
+## 🌐 Access the Services
+
+- **FastAPI Backend**: [http://localhost:8000](http://localhost:8000)
+- **MCP Server (SSE Endpoint)**: [http://localhost:3001/sse](http://localhost:3001/sse)
+
+
+## ⚙️ Configuration Highlights
+
+- 🌀 **FastAPI** uses a **lifespan hook** to initialize the `MCPClient`.
+- 🔗 `MCPClient` connects to the **MCP server** at startup and fetches available tools.
+- 🧩 Tools are **modular** and easy to **register** or **extend**.
+- 🔄 Communication between **FastAPI** and **MCP server** happens via **SSE (Server-Sent Events)** for real-time processing.
+
+## 🧪 Example Use Case
+
+> **Question:** _"Explain Quantum Computing in simple terms with examples from recent articles"_
+
+### 🔁 Step-by-Step Flow
+
+1. 🧠 **LLM** decides a web search tool is required.
+2. 🕸️ `crawler.py` performs top-level scraping of relevant links and summaries.
+3. 🔍 `crawler2.py` fetches deeper in-depth data from the internal links.
+4. 📤 The results are **fed back to the LLM**.
+5. 🧾 LLM constructs a **well-grounded, real-time response** using fresh data.
+
+---
+
+## 🛠️ Tech Stack
+
+| Tech              | Usage                                              |
+|-------------------|----------------------------------------------------|
+| **FastAPI**       | Main backend server                                |
+| **Python Asyncio**| Concurrency for SSE + tool execution               |
+| **Docker**        | Containerization for consistent deployment         |
+| **SSE**           | Real-time FastAPI ↔ MCP server communication       |
+| **LLMs**          | OpenAI / Groq via `langchain_groq`                 |
+| **Firecrawl**     | Web crawling API for scraping and retrieval        |
+
