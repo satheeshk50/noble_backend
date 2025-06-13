@@ -5,15 +5,13 @@ from mcp import ClientSession
 from mcp.client.sse import sse_client
 from rich.pretty import pprint
 from typing import Optional, List, Dict, Any
-from langchain_groq import ChatGroq
 from .utils.logger import logger
 from .doitr.client import server_url
 from openai import OpenAI
 from .utils.OpenAI import OpenRouterClient
 import os
-load_dotenv()
-print(os.getenv("OPENAI_API_KEY"))
-openai = OpenRouterClient("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")
+load_dotenv(dotenv_path='routes\\.env')
+openai = OpenRouterClient(os.getenv("OPENAI_API_KEY"))
 class MCPClient:
     def __init__(self,server_url:str):
         self.session: Optional[ClientSession] = None
@@ -84,25 +82,111 @@ class MCPClient:
             self.logger.error(f" Failed to call tool '{tool_name}': {str(e)}")
             return {}
         
-    async def search(self, query: str) -> Dict[str, Any]:
-        """"
-        returing the web search using the OpenAI client
-        Args:
-            query (str): The search query to perform.
-        """ 
+    async def process_query(self, query: str):
+        """Process a query using OpenAI and available tools, returning all messages at the end"""
         try:
-            self.logger.info(f" Performing web search for query: {query}")
-            response = await self.openai_client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[{"role": "user", "content": query}],
-                tools=self.tools,
-                tool_choice="auto"
-            )
-            return response
+            self.logger.info(f"Processing new query: {query[:100]}...")
             
+            # Initialize conversation with user query
+            messages = [{"role": "user", "content": query}]
+            self.messages.extend(messages)
+
+            while True:
+                self.logger.debug("Calling OpenAI API via OpenRouter")
+                
+                # Call LLM
+                response = self.openai_client.call_llm(messages,tools=self.tools)
+                self.logger.info(f"Received response from OpenAI: {response}...")
+                # Add assistant response to messages
+                assistant_message = {
+                    "role": "assistant",
+                    "content": response.content if hasattr(response, 'content') else ""
+                }
+                self.logger.info(f"Assistant response: {response}...")
+                # Handle tool calls
+                if hasattr(response, 'tool_calls') and response.tool_calls is not None:
+                    # Add tool calls to the assistant message
+                    assistant_message["tool_calls"] = []
+                    
+                    for tool_call in response.tool_calls:
+                        assistant_message["tool_calls"].append({
+                            "id": tool_call.id,
+                            "type": tool_call.type,
+                            "function": {
+                                "name": tool_call.function.name,
+                                "arguments": tool_call.function.arguments
+                            }
+                        })
+                    
+                    messages.append(assistant_message)
+                    self.messages.append(assistant_message)
+                    
+                    # Execute each tool call
+                    for tool_call in response.tool_calls:
+                        tool_name = tool_call.function.name
+                        try:
+                            # Parse arguments (they come as JSON string)
+                            import json
+                            tool_args = json.loads(tool_call.function.arguments)
+                        except json.JSONDecodeError:
+                            tool_args = {}
+                        
+                        self.logger.info(f"Executing tool: {tool_name} with args: {tool_args}")
+                        
+                        try:
+                            # Call the MCP tool
+                            result = await self.call_tool(tool_name, tool_args)
+                            print(("next_step_instruction" in result))
+                            if 'next_step_instruction' in result:
+                                tool_result_message = {
+                                "role": "tool",
+                                "tool_call_id": tool_call.id,
+                                "next_tool_call_instruction": result.next_step_instruction,
+                                "content": str(result["search_results"]),
+                                "topic": result["topic"]
+                            }
+                            # Add tool result to messages
+                            else:
+                                tool_result_message = {
+                                    "role": "tool",
+                                    "tool_call_id": tool_call.id,
+                                    "content": str(result.content) if hasattr(result, 'content') else str(result)
+                                }
+                            
+                            messages.append(tool_result_message)
+                            self.messages.append(tool_result_message)
+                            # await self.log_conversation(messages)
+                            # final_response = self.call_llm_with_messages(messages)
+                            
+                            
+                        except Exception as e:
+                            error_msg = f"Tool execution failed: {str(e)}"
+                            self.logger.error(error_msg)
+                            
+                            # Add error result to messages
+                            tool_error_message = {
+                                "role": "tool",
+                                "tool_call_id": tool_call.id,
+                                "content": f"Error: {error_msg}"
+                            }
+                            
+                            messages.append(tool_error_message)
+                            self.messages.append(tool_error_message)
+                            # await self.log_conversation(messages)
+                    
+                    # Continue the loop to get the final response
+                    continue
+                
+                else:
+                    # No tool calls, this is the final response
+                    messages.append(assistant_message)
+                    self.messages.append(assistant_message)
+                    break
+            return messages
         except Exception as e:
-            self.logger.error(f" Error during search: {str(e)}")
-            return {"error": str(e)}
+            self.logger.error(f"Error processing query: {str(e)}")
+
+        
         
     async def cleanup(self):
         """Clean up resources"""

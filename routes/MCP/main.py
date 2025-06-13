@@ -64,7 +64,7 @@ async def get_content(topic: str) -> str:
         logger.info(f"Getting content for topic: {topic}")
         
         # Get search results
-        results = crawler.crawl_related_content(topic, max_results=3, delay=1.0)
+        results = crawler.crawl_related_content(topic, max_results=1, delay=1.0)
         
         # Add instruction for next tool usage
         instruction_text = """
@@ -84,7 +84,7 @@ async def get_content(topic: str) -> str:
         }
         
         logger.info(f"Successfully retrieved {len(results)} results for topic: {topic}")
-        return json.dumps(response, indent=2)
+        return response
         
     except Exception as e:
         error_msg = f"Error during get_content execution: {str(e)}"
@@ -94,7 +94,7 @@ async def get_content(topic: str) -> str:
 @mcp.tool()
 async def get_internal_content(urls: List[str]) -> str:
     """
-    Tool is used for fetching content from a list of given URLs.
+    Tool is used for fetching content from a list of given internal URLs.
     
     This tool retrieves the full text content from specified web page URLs. It is designed to be
     used after the initial web search to gather more detailed information from specific pages.
