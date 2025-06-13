@@ -28,7 +28,7 @@ class ContentCrawler:
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         })
     
-    def search_related_topics(self, query: str, num_results: int = 10, 
+    def search_related_topics(self, query: str, num_results: int = 2, 
                             country: str = 'us', language: str = 'en') -> Dict:
         """
         Search for content using Serper API
@@ -61,7 +61,7 @@ class ContentCrawler:
             logger.error(f"Error searching with Serper API: {e}")
             return {}
     
-    def extract_internal_links(self, soup: BeautifulSoup, base_url: str, max_links: int = 10) -> List[str]:
+    def extract_internal_links(self, soup: BeautifulSoup, base_url: str, max_links: int = 1) -> List[str]:
         """
         Extract internal links from a webpage
         

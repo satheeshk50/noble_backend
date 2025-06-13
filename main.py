@@ -88,7 +88,7 @@ async def root():
 @app.get("/call-llm")
 async def calling_llm(query : str):
     try:
-        response = await mcp_client.search(query=query)
+        response = await mcp_client.process_query(query=query)
         return {"message": "LLM called successfully", "response": response}
     except Exception as e:
             logger.info(f"Failed to fetch tools: {str(e)}")
