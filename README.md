@@ -73,7 +73,7 @@ Ensure you have the following installed:
 ```env
 OPENAI_API_KEY=your_openai_key
 FIRECRAWL_API_KEY=your_firecrawl_key
-
+SERPER_API_KEY=your_serperapi_key
 ```
 ## 🐳 Run with Docker Compose
 
@@ -82,6 +82,21 @@ To start the backend and MCP servers, run:
 ```bash
 docker-compose up --build
 ```
+## How to run in your local
+First navigate to routes\MCP 
+then 
+```bash
+python main.py
+```
+The above command runs the MCp server
+
+for starting the fastapi server 
+navigate to nobel_backend
+``` bash
+uvicorn main:app --reload
+```
+The above command starts the fastapi server 
+
 ## 🔧 What This Will Do
 
 - ✅ Start the **FastMCP** service on port `3001`
