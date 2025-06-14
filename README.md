@@ -29,6 +29,9 @@ This project enables users to ask questions on any topic. Instead of relying sol
    - The tool’s output is returned to the LLM.
    - The LLM integrates this result into the final response and returns it to the user.
 
+![Screenshot 2025-06-08 073752](https://github.com/user-attachments/assets/a64dddd3-bfb1-47d0-a63f-e61078f930b5)
+
+
 ---
 
 ## 🗂️ Folder Structure
